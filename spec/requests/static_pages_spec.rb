@@ -15,18 +15,35 @@ describe "StaticPages" do
     it_should_behave_like "all static pages"
 
     describe "for signed-in users" do
-      let(:user) {FactoryGirl.create(:user) }
-      before do
+      let(:user) { FactoryGirl.create(:user) }
+      before(:each) do
         FactoryGirl.create(:micropost, user: user, content: "Lorem ipsum")
-        FactoryGirl.create(:micropost, user: user, content: "Dolor sit amet")
         sign_in user
+      end
+
+      it "should have micropost count in sidebar" do
         visit root_path
+        page.should have_content(user.microposts.count)
+        page.should have_content("micropost")
+        FactoryGirl.create(:micropost, user: user, content: "Dolor sit amet")
+        visit root_path
+        page.should have_content("microposts")        
       end
 
       it "should render the user's feed" do
+        visit root_path
         user.feed.each do |item|
           page.should have_selector("li##{item.id}", text: item.content)
         end
+      end
+
+      describe "micropost pagination" do
+      
+        before(:all) { 31.times { FactoryGirl.create(:micropost, user: user, content: "Fred") } }
+        after(:all)  { user.microposts.delete_all }
+
+        it { should have_selector('div.pagination') }
+
       end
     end
 	end

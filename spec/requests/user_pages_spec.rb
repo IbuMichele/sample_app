@@ -74,11 +74,27 @@ describe "UserPages" do
 		let(:page_title) 	{ user.name }
 		it_should_behave_like "all user pages"
 
+		it { should_not have_link('delete') }
+
+		describe "delete links should show for signed in user" do
+			before { sign_in user }
+			it { should have_link('delete') }
+		end
+
 		describe "microposts" do
 			it { should have_content(m1.content) }
 			it { should have_content(m2.content) }
 			it { should have_content(user.microposts.count) }
 		end
+
+		describe "micropost pagination" do
+      
+        	before(:all) { 31.times { FactoryGirl.create(:micropost, user: user, content: "Fred") } }
+        	after(:all)  { user.microposts.delete_all }
+
+        	it { should have_selector('div.pagination') }
+
+      	end
 	end
 
 	describe "signup" do
